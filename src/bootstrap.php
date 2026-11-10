@@ -101,7 +101,9 @@ $staffingService   = new StaffingService($operationRepository);
 // --- Contrôleurs -----------------------------------------------------------------
 $controllers = [
     AuthController::class      => static fn () => new AuthController($view, $session, $auth),
-    DashboardController::class => static fn () => new DashboardController($view, $session, $auth),
+    DashboardController::class => static fn () => new DashboardController(
+        $view, $session, $auth, $operationRepository, $threatRepository, $trainingRepository,
+    ),
 
     AgentController::class => static fn () => new AgentController(
         $view, $session, $auth,

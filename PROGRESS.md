@@ -20,7 +20,7 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 | 7 | Menaces | ✅ |
 | 8 | Opérations et staffing | ✅ |
 | 9 | Médias | ✅ |
-| 10 | Tableau de bord | à faire |
+| 10 | Tableau de bord | ✅ |
 | 11 | Finitions graphiques et accessibilité | à faire |
 
 ## Journal
@@ -128,3 +128,9 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 - Script `tests/medias.sh` (images de test embarquées en base64).
 
 **Tests curl (48/48)** — parcours **« uploader un portrait et le voir remplacer le visuel par défaut »** (Barry : SVG avant, image après, fichier sur le disque, ligne en base, vignette dans la liste). Aussi : la plus récente devient principale et l'ancienne passe en galerie ; un PNG nommé `evil.php` est enregistré en `.png` ; faux JPEG, polyglotte JPEG + PHP, fichier de 2,5 Mo et envoi vide refusés avec un message ; agent archivé refusé ; upload sans jeton CSRF refusé (403) ; suppression d'un média (ligne et fichier) ; illustration d'une opération réservée à son déclarant ; suppression d'une opération et d'une menace avec leurs fichiers.
+
+### Étape 10 — Tableau de bord
+
+**Fait** : quatre panneaux avec un indicateur chiffré : opérations en cours puis planifiées (par libellé de statut), agents disponibles (en service, sur aucune opération « En cours », décision Q12), menaces de tier God (par libellé, Q9), cinq dernières sessions de formation avec leur résultat.
+
+**Tests curl (13/13)** : Crépuscule (en cours) et Cendres (planifiée) affichées, Aube Rouge (réussie) absente ; 7 agents disponibles (les 3 participants de Crépuscule et Jane, archivée, exclus) ; Darkseid et Thanos ; 5 formations, la plus récente en tête.
