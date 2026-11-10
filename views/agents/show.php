@@ -154,12 +154,12 @@ $age = age($agent->dob);
         </section>
 
         <section class="panel hud" aria-labelledby="trainings-title">
-            <h2 id="trainings-title" class="panel__title">
-                Formations
+            <div class="panel__head">
+                <h2 id="trainings-title" class="panel__title">Formations</h2>
                 <?php if (!$agent->isArchived()): ?>
-                    <a class="btn btn--small" href="/agents/<?= e($agent->id) ?>/trainings/new">Nouvelle session</a>
+                    <a class="btn btn--small" href="/agents/<?= e($agent->id) ?>/trainings/new">Nouvelle session<span class="visually-hidden"> de formation pour <?= e($agent->name) ?></span></a>
                 <?php endif; ?>
-            </h2>
+            </div>
             <?php if ($trainings === []): ?>
                 <p class="empty">Aucune formation suivie.</p>
             <?php else: ?>
@@ -225,10 +225,10 @@ $age = age($agent->dob);
         </section>
 
         <section class="panel hud" aria-labelledby="abilities-title">
-            <h2 id="abilities-title" class="panel__title">
-                Compétences
-                <a class="btn btn--small" href="/agents/<?= e($agent->id) ?>/abilities"><?= $agent->isArchived() ? 'Détail' : 'Gérer l\'expérience' ?></a>
-            </h2>
+            <div class="panel__head">
+                <h2 id="abilities-title" class="panel__title">Compétences</h2>
+                <a class="btn btn--small" href="/agents/<?= e($agent->id) ?>/abilities"><?= $agent->isArchived() ? 'Détail des compétences' : 'Gérer les compétences d\'expérience' ?></a>
+            </div>
             <?php if ($abilities === []): ?>
                 <p class="empty">Aucune compétence.</p>
             <?php else: ?>

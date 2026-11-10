@@ -114,4 +114,7 @@ check "Admin supprime Darkseid (avec portrait)" "303 $BASE/threats" "$(post admi
 check "menace et médias supprimés" "0 0" "$(sql 'SELECT (SELECT COUNT(*) FROM Threats WHERE Id_Threat=1), (SELECT COUNT(*) FROM Medias WHERE Id_Threat=1)')"
 check "fichier du portrait supprimé" "no" "$([[ -f "public/$TFILE" ]] && echo yes || echo no)"
 
+# Nettoyage : le portrait de test de Barry est le seul fichier encore présent.
+rm -f "public/$JPG"
+
 summary

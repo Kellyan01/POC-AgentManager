@@ -108,6 +108,14 @@ absent() {
     if decode <<<"$3" | grep -qF -- "$2"; then check "$1" yes no; else check "$1" yes yes; fi
 }
 
+# reset_db : ré-importe le script SQL de référence (ATTENTION : supprime et recrée la base).
+# Variables : MYSQL (client mysql), DB_USER, DB_PASSWORD, SQL_FILE.
+reset_db() {
+    local sql_file="${SQL_FILE:-../agent_manager_v3.sql}"
+    "${MYSQL:-mysql}" -u"${DB_USER:-root}" -p"${DB_PASSWORD:-root}" --default-character-set=utf8mb4 < "$sql_file" 2>/dev/null \
+        || { echo "Échec de l'import de $sql_file"; exit 1; }
+}
+
 # summary : bilan et code de sortie.
 summary() {
     echo

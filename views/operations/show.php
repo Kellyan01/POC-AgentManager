@@ -171,10 +171,12 @@ $opUrl = '/operations/' . $operation->id;
                     <tr>
                         <th scope="row" data-label="Agent"><?= $this->partial('agent-name', ['id' => $participant['agent_id'], 'name' => $participant['name'], 'archived' => $participant['archived']]) ?></th>
                         <td data-label="Tier">
-                            <?= $this->partial('tier', ['tier' => $participant['tier']]) ?>
-                            <?php if (in_array($participant['agent_id'], $underTiered, true)): ?>
-                                <span class="warning-text">Tier inférieur à la menace</span>
-                            <?php endif; ?>
+                            <span>
+                                <?= $this->partial('tier', ['tier' => $participant['tier']]) ?>
+                                <?php if (in_array($participant['agent_id'], $underTiered, true)): ?>
+                                    <span class="warning-text">Tier inférieur à la menace</span>
+                                <?php endif; ?>
+                            </span>
                         </td>
                         <td data-label="Équipe à l'époque">
                             <?php if ($participant['team_id'] !== null): ?>

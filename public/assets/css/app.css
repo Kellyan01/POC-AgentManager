@@ -311,6 +311,13 @@ main:focus {
     padding: 1.5rem 1rem 3rem;
 }
 
+/* Espacement vertical régulier entre les blocs de premier niveau de la page */
+.page > * + *,
+.dossier > * > * + *,
+.grid > div > * + * {
+    margin-top: var(--gap);
+}
+
 .page-header {
     display: flex;
     flex-wrap: wrap;
@@ -426,6 +433,24 @@ main:focus {
     border-bottom: 1px solid var(--line);
     font-size: 1.25rem;
     text-transform: uppercase;
+}
+
+/* En-tête de panneau avec action : le bouton reste HORS du titre (lecteurs d'écran) */
+.panel__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.panel__head > .panel__title {
+    margin: 0;
+    padding: 0;
+    border: 0;
 }
 
 .panel__title small {
@@ -1224,15 +1249,22 @@ input[type="file"].field__control {
         border-bottom: 1px solid var(--line-strong);
     }
 
-    .data-table--cards td {
-        display: grid;
-        grid-template-columns: 9rem 1fr;
-        gap: 0.5rem;
+    /* Libellé de colonne (9rem) puis contenus à la suite, avec retour à la ligne si besoin.
+       En flex, un badge garde sa taille naturelle au lieu de s'étirer. */
+    .data-table--cards td,
+    .data-table--cards th[scope="row"] {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem 0.5rem;
         padding: 0.35rem 0.5rem;
         border: 0;
+        text-align: left;
     }
 
-    .data-table--cards td::before {
+    .data-table--cards td::before,
+    .data-table--cards th[scope="row"]::before {
+        flex: 0 0 9rem;
         content: attr(data-label);
         color: var(--text-muted);
         font-family: var(--font-mono);

@@ -21,7 +21,7 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 | 8 | Opérations et staffing | ✅ |
 | 9 | Médias | ✅ |
 | 10 | Tableau de bord | ✅ |
-| 11 | Finitions graphiques et accessibilité | à faire |
+| 11 | Finitions graphiques et accessibilité | ✅ |
 
 ## Journal
 
@@ -134,3 +134,36 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 **Fait** : quatre panneaux avec un indicateur chiffré : opérations en cours puis planifiées (par libellé de statut), agents disponibles (en service, sur aucune opération « En cours », décision Q12), menaces de tier God (par libellé, Q9), cinq dernières sessions de formation avec leur résultat.
 
 **Tests curl (13/13)** : Crépuscule (en cours) et Cendres (planifiée) affichées, Aube Rouge (réussie) absente ; 7 agents disponibles (les 3 participants de Crépuscule et Jane, archivée, exclus) ; Darkseid et Thanos ; 5 formations, la plus récente en tête.
+
+### Étape 11 — Finitions graphiques et accessibilité
+
+**Fait**
+- Contrastes calculés pour toutes les paires de la palette (formule WCAG) : texte de 7,8:1 à 16,9:1, accent 9,6 à 12:1, ambre 10,8:1, rouge 6,5 à 7,4:1, bordures de composants 4,6 à 5,2:1, focus 14,8:1, texte des boutons 11,6:1. Toutes conformes AA.
+- Captures Chrome headless (bureau 1280 px et 500 px, en mouvement réduit) relues une à une. Corrections : espacement vertical entre les blocs de page, boutons sortis des titres `<h2>` (`.panel__head`), cellules du mode « cartes » en flex (badges non étirés, en-têtes de ligne stylés).
+- `tests/a11y_check.php` : vérification automatique de la structure (lang, h1 unique, titre unique, lien d'évitement, labels, alt, SVG, `aria-describedby`, ids uniques, pas de bouton dans un titre, `th scope`), validée sur un contre-exemple.
+- `tests/smoke.sh` : script de recette complet (ré-import de la base entre les séries).
+- `README.md` : installation, comptes de démo, rôles, schéma d'architecture, règles métier et emplacement dans le code, sécurité, accessibilité, tests.
+
+**Recette finale (`bash tests/smoke.sh`)** : socle et parcours 25/25, opérations 58/58, médias 48/48, accessibilité structurelle OK sur 25 pages.
+
+## Bilan
+
+Toutes les fonctionnalités des sections 7 à 10 du cahier des charges sont en place, et les sept parcours de la section 13 passent de bout en bout :
+
+| Parcours | Script |
+|---|---|
+| Déplacer Barry Allen vers une autre équipe | `smoke.sh` |
+| Archiver une équipe et constater la clôture des appartenances | `smoke.sh` |
+| Créer une opération avec missions et lieux | `operations.sh` |
+| Affecter une équipe et voir ses membres copiés en participants | `operations.sh` |
+| Staffing sur « Cendres » : seule Kara Danvers est proposée | `operations.sh` |
+| Uploader un portrait qui remplace le visuel par défaut | `medias.sh` |
+| Action interdite refusée à un Manager | `smoke.sh`, `operations.sh`, `medias.sh` |
+
+## Limites connues et pistes
+
+- **Pas de test manuel au lecteur d'écran** (NVDA, VoiceOver) : seules la structure et les contrastes ont été vérifiés automatiquement, et la navigation au clavier découle du HTML natif (aucun composant JS personnalisé). Un passage manuel reste recommandé avant de présenter l'application comme conforme.
+- Capture mobile : Chrome headless impose une largeur minimale d'environ 500 px ; le rendu à 390 px n'a pas pu être capturé, mais il repose sur les mêmes règles (< 640 px).
+- Pas de pagination (le jeu de données est petit) ni de désarchivage (non demandé).
+- Requête 3 : si une opération commence exactement à la seconde d'un changement d'équipe, deux équipes « à l'époque » peuvent apparaître (bornes inclusives) — signalé dans `PLAN.md` §2, requête conservée telle quelle.
+- Points du schéma signalés sans contournement : voir `PLAN.md` §2 (cohérence `date_end` / `is_passed` dans `Trainings`, unicité des noms d'équipe archivée comprise).
