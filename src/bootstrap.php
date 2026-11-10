@@ -17,10 +17,12 @@ use App\Controller\Admin\AdminController;
 use App\Controller\Admin\ReferenceController;
 use App\Controller\Admin\TierController;
 use App\Controller\Admin\UserController;
+use App\Controller\AgentAbilityController;
 use App\Controller\AgentController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
 use App\Controller\TeamController;
+use App\Controller\TrainingController;
 use App\Core\App;
 use App\Core\Auth;
 use App\Core\Csrf;
@@ -28,12 +30,14 @@ use App\Core\Database;
 use App\Core\Router;
 use App\Core\Session;
 use App\Core\View;
+use App\Repository\AgentAbilityRepository;
 use App\Repository\AgentRepository;
 use App\Repository\MembershipRepository;
 use App\Repository\ReferenceDefinition;
 use App\Repository\ReferenceRepository;
 use App\Repository\TeamRepository;
 use App\Repository\TierRepository;
+use App\Repository\TrainingRepository;
 use App\Repository\UserRepository;
 use App\Service\AgentService;
 use App\Service\MembershipService;
@@ -67,6 +71,8 @@ $references = array_map(
 $agentRepository      = new AgentRepository($pdo);
 $teamRepository       = new TeamRepository($pdo);
 $membershipRepository = new MembershipRepository($pdo);
+$trainingRepository   = new TrainingRepository($pdo);
+$agentAbilities       = new AgentAbilityRepository($pdo);
 
 // --- Services ------------------------------------------------------------------
 $auth         = new Auth($session, $csrf, $userRepository);
@@ -83,6 +89,13 @@ $controllers = [
         $agentRepository, $teamRepository, $tierRepository,
         $references['archetypes'], $references['abilities'],
         $membershipRepository, $agentService, $membershipService,
+        $trainingRepository, $agentAbilities,
+    ),
+    TrainingController::class => static fn () => new TrainingController(
+        $view, $session, $auth, $trainingRepository, $agentRepository, $references['formations'],
+    ),
+    AgentAbilityController::class => static fn () => new AgentAbilityController(
+        $view, $session, $auth, $agentRepository, $agentAbilities,
     ),
     TeamController::class => static fn () => new TeamController(
         $view, $session, $auth,

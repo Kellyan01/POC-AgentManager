@@ -16,10 +16,12 @@ use App\Controller\Admin\AdminController;
 use App\Controller\Admin\ReferenceController;
 use App\Controller\Admin\TierController;
 use App\Controller\Admin\UserController;
+use App\Controller\AgentAbilityController;
 use App\Controller\AgentController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
 use App\Controller\TeamController;
+use App\Controller\TrainingController;
 use App\Core\Access;
 use App\Core\Router;
 use App\Repository\ReferenceDefinition;
@@ -43,6 +45,18 @@ return static function (Router $router): void {
     $router->post('/agents/{id}/archive', [AgentController::class, 'archive'], Access::Admin);
     // Changement d'équipe : droits vérifiés dans le contrôleur et MembershipService (décision Q2)
     $router->post('/agents/{id}/team', [AgentController::class, 'assignTeam']);
+
+    // --- Formations suivies (Administrateur et Manager ; suppression : Admin) --
+    $router->get('/agents/{id}/trainings/new', [TrainingController::class, 'new']);
+    $router->post('/agents/{id}/trainings', [TrainingController::class, 'create']);
+    $router->get('/trainings/{id}/edit', [TrainingController::class, 'edit']);
+    $router->post('/trainings/{id}', [TrainingController::class, 'update']);
+    $router->post('/trainings/{id}/delete', [TrainingController::class, 'delete'], Access::Admin);
+
+    // --- Compétences d'expérience (Administrateur et Manager) ----------------
+    $router->get('/agents/{id}/abilities', [AgentAbilityController::class, 'index']);
+    $router->post('/agents/{id}/abilities', [AgentAbilityController::class, 'add']);
+    $router->post('/agents/{id}/abilities/{abilityId}/delete', [AgentAbilityController::class, 'remove']);
 
     // --- Équipes (création / modification / archivage : Administrateur) -------
     $router->get('/teams', [TeamController::class, 'index']);

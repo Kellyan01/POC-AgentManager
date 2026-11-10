@@ -16,7 +16,7 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 | 3 | Référentiels et utilisateurs | ✅ |
 | 4 | Agents | ✅ |
 | 5 | Équipes et appartenances | ✅ |
-| 6 | Formations et compétences | à faire |
+| 6 | Formations et compétences | ✅ |
 | 7 | Menaces | à faire |
 | 8 | Opérations et staffing | à faire |
 | 9 | Médias | à faire |
@@ -78,4 +78,17 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 
 **Tests curl (51/51)** — parcours **« déplacer Barry Allen »** : Hill ne peut pas le prendre à Coulson (message « son manager doit d'abord le libérer »), Coulson ne peut pas l'envoyer chez les Avengers (403), Coulson le libère, Hill l'intègre puis le transfère entre ses deux équipes, l'Admin le transfère directement ; une seule appartenance en cours en base, clôture et ouverture au même instant. Parcours **« archiver une équipe »** : Dark Squad archivée par l'Admin, 2 appartenances closes (vérifié en base), équipe absente de la liste, membres sans équipe, ajout de membre refusé, non modifiable. Nom d'une équipe archivée non réutilisable.
 
-**Écart au plan** : route supplémentaire `POST /agents/{id}/team` utilisée par le panneau « Affectation » (la destination est choisie dans une liste, l'URL du formulaire ne peut pas en dépendre sans JavaScript).
+**Écart au plan (étape 5)** : route supplémentaire `POST /agents/{id}/team` utilisée par le panneau « Affectation » (la destination est choisie dans une liste, l'URL du formulaire ne peut pas en dépendre sans JavaScript).
+
+### Étape 6 — Formations et compétences
+
+**Fait**
+- `Training` (résultat NULL / 1 / 0 → « En cours » / « Réussie » / « Échouée », comme la requête 5), `TrainingRepository` (historique d'un agent, dernières sessions pour le tableau de bord).
+- `TrainingController` : nouvelle session, modification, suppression (Admin). Validation : fin postérieure au début, résultat seulement avec une date de fin passée (décision Q14). Chaque tentative est une ligne distincte.
+- `AgentAbilityRepository` : compétences lues **via la vue `agent_abilities`** avec leurs provenances regroupées (requête 4) ; compétences attribuables = celles que l'agent ne possède par **aucune** source.
+- `AgentAbilityController` : la liste proposée est filtrée **et** l'ajout est revérifié côté serveur ; seules les compétences d'expérience sont retirables.
+- Dossier agent : sections « Formations » et « Compétences » (provenance en toutes lettres : Archétype / Formation / Expérience).
+
+**Tests curl (31/31)** : historique de Peter (échec puis réussite du pilotage), provenances, 9 compétences proposées à Barry (11 − 2), refus de forcer une compétence déjà acquise, ajout/retrait d'expérience, refus de retirer une compétence d'archétype, validations des dates et du résultat (valeurs conservées), réussite de Wally → « Premiers secours » apparaît via Formation, suppression réservée à l'Admin, agent archivé non modifiable.
+
+**Écart au plan** : page `GET /agents/{id}/trainings/new` ajoutée pour le formulaire (les erreurs s'y affichent près des champs, plutôt que de recharger tout le dossier).

@@ -10,6 +10,8 @@
  * @var bool                $canRelease   l'utilisateur gère l'équipe actuelle de l'agent
  * @var bool                $canMove      l'utilisateur peut changer l'agent d'équipe
  * @var list<App\Model\Team> $destinations équipes vers lesquelles il peut le transférer
+ * @var list<App\Model\Training> $trainings
+ * @var list<array{id: int, ability: string, sources: list<string>}> $abilities
  */
 $age = age($agent->dob);
 ?>
@@ -142,6 +144,64 @@ $age = age($agent->dob);
                         </tbody>
                     </table>
                 </div>
+            <?php endif; ?>
+        </section>
+
+        <section class="panel hud" aria-labelledby="trainings-title">
+            <h2 id="trainings-title" class="panel__title">
+                Formations
+                <?php if (!$agent->isArchived()): ?>
+                    <a class="btn btn--small" href="/agents/<?= e($agent->id) ?>/trainings/new">Nouvelle session</a>
+                <?php endif; ?>
+            </h2>
+            <?php if ($trainings === []): ?>
+                <p class="empty">Aucune formation suivie.</p>
+            <?php else: ?>
+                <div class="table-wrap">
+                    <table class="data-table data-table--cards">
+                        <caption class="visually-hidden">Sessions de formation de <?= e($agent->name) ?>, échecs compris</caption>
+                        <thead>
+                        <tr>
+                            <th scope="col">Formation</th><th scope="col">Début</th><th scope="col">Fin</th><th scope="col">Résultat</th>
+                            <?php if (!$agent->isArchived()): ?><th scope="col" class="actions">Actions</th><?php endif; ?>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php foreach ($trainings as $training): ?>
+                            <tr>
+                                <td data-label="Formation"><?= e($training->formation) ?></td>
+                                <td data-label="Début"><time datetime="<?= e(iso_date($training->dateBeg)) ?>"><?= e(format_date($training->dateBeg)) ?></time></td>
+                                <td data-label="Fin"><?= $training->dateEnd === null ? '—' : '<time datetime="' . e(iso_date($training->dateEnd)) . '">' . e(format_date($training->dateEnd)) . '</time>' ?></td>
+                                <td data-label="Résultat"><span class="status status--<?= e($training->resultModifier()) ?>"><?= e($training->resultLabel()) ?></span></td>
+                                <?php if (!$agent->isArchived()): ?>
+                                    <td class="actions" data-label="Actions">
+                                        <a class="btn btn--small" href="/trainings/<?= e($training->id) ?>/edit">Modifier<span class="visually-hidden"> la session <?= e($training->formation) ?> du <?= e(format_date($training->dateBeg)) ?></span></a>
+                                    </td>
+                                <?php endif; ?>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </section>
+
+        <section class="panel hud" aria-labelledby="abilities-title">
+            <h2 id="abilities-title" class="panel__title">
+                Compétences
+                <a class="btn btn--small" href="/agents/<?= e($agent->id) ?>/abilities"><?= $agent->isArchived() ? 'Détail' : 'Gérer l\'expérience' ?></a>
+            </h2>
+            <?php if ($abilities === []): ?>
+                <p class="empty">Aucune compétence.</p>
+            <?php else: ?>
+                <ul class="list">
+                    <?php foreach ($abilities as $ability): ?>
+                        <li>
+                            <span class="list__main"><?= e($ability['ability']) ?></span>
+                            <?= $this->partial('ability-sources', ['sources' => $ability['sources']]) ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
             <?php endif; ?>
         </section>
     </div>

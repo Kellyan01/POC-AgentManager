@@ -15,11 +15,13 @@ use App\Model\Agent;
 use App\Model\ReferenceItem;
 use App\Model\Team;
 use App\Model\Tier;
+use App\Repository\AgentAbilityRepository;
 use App\Repository\AgentRepository;
 use App\Repository\MembershipRepository;
 use App\Repository\ReferenceRepository;
 use App\Repository\TeamRepository;
 use App\Repository\TierRepository;
+use App\Repository\TrainingRepository;
 use App\Service\AgentService;
 use App\Service\MembershipService;
 use DateTimeImmutable;
@@ -44,6 +46,8 @@ final class AgentController extends AbstractController
         private readonly MembershipRepository $memberships,
         private readonly AgentService $agentService,
         private readonly MembershipService $membershipService,
+        private readonly TrainingRepository $trainings,
+        private readonly AgentAbilityRepository $agentAbilities,
     ) {
         parent::__construct($view, $session, $auth);
     }
@@ -95,6 +99,8 @@ final class AgentController extends AbstractController
             'canRelease'   => $canRelease && !$agent->isArchived(),
             'canMove'      => $canMove,
             'destinations' => $canMove ? $destinations : [],
+            'trainings'    => $this->trainings->findForAgent($id),
+            'abilities'    => $this->agentAbilities->findForAgent($id),
         ]);
     }
 
