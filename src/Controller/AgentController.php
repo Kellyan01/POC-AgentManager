@@ -12,11 +12,13 @@ use App\Core\Session;
 use App\Core\Validator;
 use App\Core\View;
 use App\Model\Agent;
+use App\Model\MediaOwner;
 use App\Model\ReferenceItem;
 use App\Model\Team;
 use App\Model\Tier;
 use App\Repository\AgentAbilityRepository;
 use App\Repository\AgentRepository;
+use App\Repository\MediaRepository;
 use App\Repository\MembershipRepository;
 use App\Repository\OperationRepository;
 use App\Repository\ReferenceRepository;
@@ -50,6 +52,7 @@ final class AgentController extends AbstractController
         private readonly TrainingRepository $trainings,
         private readonly AgentAbilityRepository $agentAbilities,
         private readonly OperationRepository $operations,
+        private readonly MediaRepository $medias,
     ) {
         parent::__construct($view, $session, $auth);
     }
@@ -104,6 +107,7 @@ final class AgentController extends AbstractController
             'trainings'    => $this->trainings->findForAgent($id),
             'abilities'    => $this->agentAbilities->findForAgent($id),
             'operations'   => $this->operations->findForAgent($id),
+            'medias'       => $this->medias->findForOwner(MediaOwner::Agent, $id),
         ]);
     }
 

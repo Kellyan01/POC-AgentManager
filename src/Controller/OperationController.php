@@ -12,12 +12,14 @@ use App\Core\Session;
 use App\Core\Validator;
 use App\Core\View;
 use App\Model\Agent;
+use App\Model\MediaOwner;
 use App\Model\Operation;
 use App\Model\ReferenceItem;
 use App\Model\Status;
 use App\Model\Team;
 use App\Model\Threat;
 use App\Repository\AgentRepository;
+use App\Repository\MediaRepository;
 use App\Repository\OperationRepository;
 use App\Repository\ReferenceRepository;
 use App\Repository\TeamRepository;
@@ -52,6 +54,7 @@ final class OperationController extends AbstractController
         private readonly ReferenceRepository $missions,
         private readonly ReferenceRepository $locations,
         private readonly ReferenceRepository $abilities,
+        private readonly MediaRepository $medias,
     ) {
         parent::__construct($view, $session, $auth);
     }
@@ -100,7 +103,17 @@ final class OperationController extends AbstractController
             'addableAgents'     => $canEdit
                 ? array_values(array_filter($this->agents->findAll(), static fn (Agent $a): bool => !in_array($a->id, $participantIds, true)))
                 : [],
+            'medias'            => $this->medias->findForOwner(MediaOwner::Operation, $id),
         ]);
+    }
+
+    /** Suppression (Administrateur ou déclarant, décision Q6) : médias et fichiers compris. */
+    public function delete(Request $request, int $id): Response
+    {
+        $operation = $this->editable($id);
+        $this->operationService->delete($operation);
+
+        return $this->success(sprintf('Opération %s (%s) supprimée.', $operation->codeName, $operation->serial), '/operations');
     }
 
     public function new(Request $request): Response

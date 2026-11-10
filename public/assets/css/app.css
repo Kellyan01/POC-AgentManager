@@ -984,6 +984,22 @@ textarea.field__control {
     margin-top: 1rem;
 }
 
+.upload-preview {
+    display: block;
+    max-width: 100%;
+    max-height: 12rem;
+    margin-top: 0.5rem;
+    border: 1px solid var(--line-strong);
+}
+
+.upload-preview[hidden] {
+    display: none;
+}
+
+input[type="file"].field__control {
+    padding: 0.45rem;
+}
+
 /* --- Dossier (fiche agent, menace) et ordre de mission ---------------------- */
 .dossier {
     display: grid;

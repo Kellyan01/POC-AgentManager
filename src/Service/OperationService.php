@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Core\Exception\BusinessRuleException;
 use App\Model\Agent;
+use App\Model\MediaOwner;
 use App\Model\Operation;
 use App\Model\Team;
 use App\Repository\AgentRepository;
@@ -30,6 +31,7 @@ final class OperationService
         private readonly MembershipRepository $memberships,
         private readonly AgentRepository $agents,
         private readonly SerialGenerator $serials,
+        private readonly MediaService $media,
     ) {
     }
 
@@ -88,6 +90,27 @@ final class OperationService
             $this->pdo->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Supprime l'opération. Les clés étrangères de Medias sont en RESTRICT : les
+     * lignes des médias sont supprimées d'abord, dans la même transaction ; les
+     * liaisons (missions, participants...) partent en CASCADE. Les fichiers
+     * sont effacés du disque seulement après le commit.
+     */
+    public function delete(Operation $operation): void
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $files = $this->media->deleteRowsForOwner(MediaOwner::Operation, (int) $operation->id);
+            $this->operations->delete((int) $operation->id);
+            $this->pdo->commit();
+        } catch (Throwable $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+
+        $this->media->removeFiles($files);
     }
 
     /**

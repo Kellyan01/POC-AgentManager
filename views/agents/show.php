@@ -13,6 +13,7 @@
  * @var list<App\Model\Training> $trainings
  * @var list<array{id: int, ability: string, sources: list<string>}> $abilities
  * @var list<array{id: int, serial: string, code_name: string, status: string, date_beg: DateTimeImmutable, date_end: ?DateTimeImmutable, team_id: ?int, team_name: ?string}> $operations
+ * @var list<App\Model\Media> $medias portraits, le plus récent d'abord
  */
 $age = age($agent->dob);
 ?>
@@ -52,6 +53,10 @@ $age = age($agent->dob);
 <div class="dossier">
     <aside aria-label="Portrait">
         <?= $this->partial('portrait', ['url' => $agent->portrait, 'alt' => 'Portrait de ' . $agent->name, 'kind' => 'agent']) ?>
+        <?= $this->partial('media-manager', [
+            'medias' => $medias, 'alt' => 'Portrait de ' . $agent->name, 'kind' => 'agent',
+            'canEdit' => !$agent->isArchived(), 'action' => '/agents/' . $agent->id . '/medias',
+        ]) ?>
     </aside>
 
     <div class="stack">

@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Core\Auth;
+use App\Core\Exception\BusinessRuleException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Session;
 use App\Core\Validator;
 use App\Core\View;
+use App\Model\MediaOwner;
 use App\Model\Threat;
 use App\Model\Tier;
+use App\Repository\MediaRepository;
 use App\Repository\ThreatRepository;
 use App\Repository\TierRepository;
 use App\Service\ThreatService;
@@ -30,6 +33,7 @@ final class ThreatController extends AbstractController
         private readonly ThreatRepository $threats,
         private readonly TierRepository $tiers,
         private readonly ThreatService $threatService,
+        private readonly MediaRepository $medias,
     ) {
         parent::__construct($view, $session, $auth);
     }
@@ -50,7 +54,22 @@ final class ThreatController extends AbstractController
             'title'      => $threat->name . ' — Fiche menace',
             'threat'     => $threat,
             'operations' => $this->threats->findOperations($id),
+            'medias'     => $this->medias->findForOwner(MediaOwner::Threat, $id),
         ]);
+    }
+
+    /** Suppression (Administrateur, route Access::Admin) d'une menace visée par aucune opération. */
+    public function delete(Request $request, int $id): Response
+    {
+        $threat = $this->found($this->threats->findById($id));
+
+        try {
+            $this->threatService->delete($threat);
+        } catch (BusinessRuleException $e) {
+            return $this->failure($e->getMessage(), '/threats/' . $id);
+        }
+
+        return $this->success(sprintf('Fiche %s (%s) supprimée.', $threat->name, $threat->serial), '/threats');
     }
 
     public function new(Request $request): Response

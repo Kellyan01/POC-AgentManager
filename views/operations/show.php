@@ -16,6 +16,7 @@
  * @var list<array{agent_id: int, name: string, tier: string, tier_level: int, team_name: ?string, abilities: string}> $suggestions
  * @var list<App\Model\Team>   $assignableTeams
  * @var list<App\Model\Agent>  $addableAgents
+ * @var list<App\Model\Media>  $medias illustrations, la plus récente d'abord
  */
 $opUrl = '/operations/' . $operation->id;
 ?>
@@ -30,13 +31,22 @@ $opUrl = '/operations/' . $operation->id;
     <?php if ($canEdit): ?>
         <div class="page-actions">
             <a class="btn" href="<?= e($opUrl) ?>/edit">Modifier</a>
+            <form class="inline-form" method="post" action="<?= e($opUrl) ?>/delete"
+                  data-confirm="Supprimer définitivement l'opération <?= e($operation->codeName) ?>, ses liaisons et ses images ?">
+                <?= $this->csrfField() ?>
+                <button type="submit" class="btn btn--danger">Supprimer</button>
+            </form>
         </div>
     <?php endif; ?>
 </header>
 
 <div class="grid grid--2">
-    <div class="stack">
+    <div>
         <?= $this->partial('portrait', ['url' => $operation->illustration, 'alt' => 'Illustration de l\'opération ' . $operation->codeName, 'kind' => 'operation']) ?>
+        <?= $this->partial('media-manager', [
+            'medias' => $medias, 'alt' => 'Illustration de l\'opération ' . $operation->codeName, 'kind' => 'operation',
+            'canEdit' => $canEdit, 'action' => $opUrl . '/medias',
+        ]) ?>
     </div>
 
     <section class="panel hud" aria-labelledby="op-order">

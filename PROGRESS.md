@@ -19,7 +19,7 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 | 6 | Formations et compétences | ✅ |
 | 7 | Menaces | ✅ |
 | 8 | Opérations et staffing | ✅ |
-| 9 | Médias | à faire |
+| 9 | Médias | ✅ |
 | 10 | Tableau de bord | à faire |
 | 11 | Finitions graphiques et accessibilité | à faire |
 
@@ -117,3 +117,14 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 **Tests curl (58/58)** — parcours de recette : **staffing « Cendres » → seule Kara Danvers**, **action interdite refusée à un Manager** (Hill sur l'opération de Coulson : 403, rien en base), **création avec missions et lieux** (OP-2026-010, erreurs près des champs et valeurs conservées), **affectation d'équipe** (3 membres de la Justice League copiés ; Avengers affectés mais leurs membres écartés car engagés sur Crépuscule). Aussi : équipe à l'époque (Barry : Avengers pour Aube Rouge, Justice League pour Chevalier Noir), avertissement de tier sur Crépuscule (Thanos, God), conflit de dates bloqué puis levé après annulation de Cendres, agent archivé refusé, retrait d'équipe sans perte de participants, équipe archivée non affectable.
 
 **Écart au plan** : pas d'`AvailabilityService` séparé. La requête de conflit est dans `OperationRepository::findConflicts()` et la règle est appliquée par `OperationService` (un service d'une seule ligne n'apportait rien). La suppression d'une opération arrive à l'étape 9 avec les médias.
+
+### Étape 9 — Médias
+
+**Fait**
+- `MediaOwner` (énumération : agent / menace / opération, avec sa colonne et son dossier), `Media`, `MediaRepository`.
+- `MediaService::upload()` : code d'erreur PHP, `is_uploaded_file`, 2 Mo maximum, **type réel lu par `finfo`**, confirmation par `getimagesize()` (même type, dimensions non nulles), nom `bin2hex(random_bytes(16))` + extension tirée de la liste blanche, fichier supprimé si l'insertion en base échoue. `removeFiles()` ne supprime que des chemins de la forme produite par l'upload.
+- Suppression d'un média : la ligne d'abord, puis le fichier. Suppression d'une **opération** (Admin ou déclarant, Q6) et d'une **menace** (Admin, si aucune opération ne la vise, Q7) : lignes `Medias` supprimées dans la même transaction que l'entité (FK en RESTRICT), fichiers effacés **après le commit**.
+- Fiches agent, menace et opération : image principale (la plus récente, requête 8), galerie des précédentes, suppression, formulaire d'upload avec aperçu JS. Textes alternatifs « Portrait de … » / « Illustration de l'opération … ».
+- Script `tests/medias.sh` (images de test embarquées en base64).
+
+**Tests curl (48/48)** — parcours **« uploader un portrait et le voir remplacer le visuel par défaut »** (Barry : SVG avant, image après, fichier sur le disque, ligne en base, vignette dans la liste). Aussi : la plus récente devient principale et l'ancienne passe en galerie ; un PNG nommé `evil.php` est enregistré en `.png` ; faux JPEG, polyglotte JPEG + PHP, fichier de 2,5 Mo et envoi vide refusés avec un message ; agent archivé refusé ; upload sans jeton CSRF refusé (403) ; suppression d'un média (ligne et fichier) ; illustration d'une opération réservée à son déclarant ; suppression d'une opération et d'une menace avec leurs fichiers.

@@ -20,12 +20,14 @@ use App\Controller\AgentAbilityController;
 use App\Controller\AgentController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
+use App\Controller\MediaController;
 use App\Controller\OperationController;
 use App\Controller\TeamController;
 use App\Controller\ThreatController;
 use App\Controller\TrainingController;
 use App\Core\Access;
 use App\Core\Router;
+use App\Model\MediaOwner;
 use App\Repository\ReferenceDefinition;
 
 return static function (Router $router): void {
@@ -83,6 +85,7 @@ return static function (Router $router): void {
     $router->post('/operations/{id}/teams/{teamId}/remove', [OperationController::class, 'removeTeam']);
     $router->post('/operations/{id}/agents', [OperationController::class, 'addAgent']);
     $router->post('/operations/{id}/agents/{agentId}/remove', [OperationController::class, 'removeAgent']);
+    $router->post('/operations/{id}/delete', [OperationController::class, 'delete']);
 
     // --- Menaces (création / modification : Administrateur et Manager) --------
     $router->get('/threats', [ThreatController::class, 'index']);
@@ -91,6 +94,13 @@ return static function (Router $router): void {
     $router->get('/threats/{id}', [ThreatController::class, 'show']);
     $router->get('/threats/{id}/edit', [ThreatController::class, 'edit']);
     $router->post('/threats/{id}', [ThreatController::class, 'update']);
+    $router->post('/threats/{id}/delete', [ThreatController::class, 'delete'], Access::Admin);
+
+    // --- Médias (droits de modification de l'entité propriétaire) ------------
+    foreach (MediaOwner::cases() as $owner) {
+        $router->post("/{$owner->value}/{id}/medias", [MediaController::class, 'upload'], Access::Authenticated, ['owner' => $owner->value]);
+    }
+    $router->post('/medias/{id}/delete', [MediaController::class, 'delete']);
 
     // --- Administration (administrateurs uniquement) --------------------------
     $router->get('/admin', [AdminController::class, 'index'], Access::Admin);

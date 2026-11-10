@@ -21,6 +21,7 @@ use App\Controller\AgentAbilityController;
 use App\Controller\AgentController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
+use App\Controller\MediaController;
 use App\Controller\OperationController;
 use App\Controller\TeamController;
 use App\Controller\ThreatController;
@@ -34,6 +35,7 @@ use App\Core\Session;
 use App\Core\View;
 use App\Repository\AgentAbilityRepository;
 use App\Repository\AgentRepository;
+use App\Repository\MediaRepository;
 use App\Repository\MembershipRepository;
 use App\Repository\OperationRepository;
 use App\Repository\ReferenceDefinition;
@@ -44,6 +46,7 @@ use App\Repository\TierRepository;
 use App\Repository\TrainingRepository;
 use App\Repository\UserRepository;
 use App\Service\AgentService;
+use App\Service\MediaService;
 use App\Service\MembershipService;
 use App\Service\OperationService;
 use App\Service\SerialGenerator;
@@ -83,14 +86,16 @@ $trainingRepository   = new TrainingRepository($pdo);
 $agentAbilities       = new AgentAbilityRepository($pdo);
 $threatRepository     = new ThreatRepository($pdo);
 $operationRepository  = new OperationRepository($pdo);
+$mediaRepository      = new MediaRepository($pdo);
 
 // --- Services ------------------------------------------------------------------
 $auth         = new Auth($session, $csrf, $userRepository);
 $agentService      = new AgentService($pdo, $agentRepository, $membershipRepository);
 $membershipService = new MembershipService($pdo, $membershipRepository, $teamRepository);
 $serialGenerator   = new SerialGenerator($pdo);
-$threatService     = new ThreatService($threatRepository, $serialGenerator);
-$operationService  = new OperationService($pdo, $operationRepository, $membershipRepository, $agentRepository, $serialGenerator);
+$mediaService      = new MediaService($mediaRepository, $root . '/public');
+$threatService     = new ThreatService($pdo, $threatRepository, $serialGenerator, $mediaService);
+$operationService  = new OperationService($pdo, $operationRepository, $membershipRepository, $agentRepository, $serialGenerator, $mediaService);
 $staffingService   = new StaffingService($operationRepository);
 
 // --- Contrôleurs -----------------------------------------------------------------
@@ -103,13 +108,17 @@ $controllers = [
         $agentRepository, $teamRepository, $tierRepository,
         $references['archetypes'], $references['abilities'],
         $membershipRepository, $agentService, $membershipService,
-        $trainingRepository, $agentAbilities, $operationRepository,
+        $trainingRepository, $agentAbilities, $operationRepository, $mediaRepository,
+    ),
+    MediaController::class => static fn () => new MediaController(
+        $view, $session, $auth, $mediaRepository, $mediaService, $agentRepository, $threatRepository, $operationRepository,
     ),
     OperationController::class => static fn () => new OperationController(
         $view, $session, $auth,
         $operationRepository, $operationService, $staffingService,
         $teamRepository, $agentRepository, $threatRepository,
         $references['statuses'], $references['missions'], $references['locations'], $references['abilities'],
+        $mediaRepository,
     ),
     TrainingController::class => static fn () => new TrainingController(
         $view, $session, $auth, $trainingRepository, $agentRepository, $references['formations'],
@@ -118,7 +127,7 @@ $controllers = [
         $view, $session, $auth, $agentRepository, $agentAbilities,
     ),
     ThreatController::class => static fn () => new ThreatController(
-        $view, $session, $auth, $threatRepository, $tierRepository, $threatService,
+        $view, $session, $auth, $threatRepository, $tierRepository, $threatService, $mediaRepository,
     ),
     TeamController::class => static fn () => new TeamController(
         $view, $session, $auth,

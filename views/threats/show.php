@@ -6,6 +6,7 @@
  * @var App\Model\Threat $threat
  * @var App\Model\User   $currentUser
  * @var list<array{id: int, serial: string, code_name: string, status: string, date_beg: DateTimeImmutable, date_end: ?DateTimeImmutable}> $operations
+ * @var list<App\Model\Media> $medias
  */
 ?>
 <header class="page-header">
@@ -18,12 +19,23 @@
     </div>
     <div class="page-actions">
         <a class="btn" href="/threats/<?= e($threat->id) ?>/edit">Modifier</a>
+        <?php if ($currentUser->isAdmin() && $operations === []): ?>
+            <form class="inline-form" method="post" action="/threats/<?= e($threat->id) ?>/delete"
+                  data-confirm="Supprimer définitivement la fiche <?= e($threat->name) ?> et ses images ?">
+                <?= $this->csrfField() ?>
+                <button type="submit" class="btn btn--danger">Supprimer</button>
+            </form>
+        <?php endif; ?>
     </div>
 </header>
 
 <div class="dossier">
     <aside aria-label="Portrait">
         <?= $this->partial('portrait', ['url' => $threat->portrait, 'alt' => 'Portrait de ' . $threat->name, 'kind' => 'threat']) ?>
+        <?= $this->partial('media-manager', [
+            'medias' => $medias, 'alt' => 'Portrait de ' . $threat->name, 'kind' => 'threat',
+            'canEdit' => true, 'action' => '/threats/' . $threat->id . '/medias',
+        ]) ?>
     </aside>
 
     <div class="stack">
