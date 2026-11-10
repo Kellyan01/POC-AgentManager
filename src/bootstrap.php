@@ -21,6 +21,7 @@ use App\Controller\AgentAbilityController;
 use App\Controller\AgentController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
+use App\Controller\OperationController;
 use App\Controller\TeamController;
 use App\Controller\ThreatController;
 use App\Controller\TrainingController;
@@ -34,6 +35,7 @@ use App\Core\View;
 use App\Repository\AgentAbilityRepository;
 use App\Repository\AgentRepository;
 use App\Repository\MembershipRepository;
+use App\Repository\OperationRepository;
 use App\Repository\ReferenceDefinition;
 use App\Repository\ReferenceRepository;
 use App\Repository\TeamRepository;
@@ -43,7 +45,9 @@ use App\Repository\TrainingRepository;
 use App\Repository\UserRepository;
 use App\Service\AgentService;
 use App\Service\MembershipService;
+use App\Service\OperationService;
 use App\Service\SerialGenerator;
+use App\Service\StaffingService;
 use App\Service\ThreatService;
 
 $root = dirname(__DIR__);
@@ -78,6 +82,7 @@ $membershipRepository = new MembershipRepository($pdo);
 $trainingRepository   = new TrainingRepository($pdo);
 $agentAbilities       = new AgentAbilityRepository($pdo);
 $threatRepository     = new ThreatRepository($pdo);
+$operationRepository  = new OperationRepository($pdo);
 
 // --- Services ------------------------------------------------------------------
 $auth         = new Auth($session, $csrf, $userRepository);
@@ -85,6 +90,8 @@ $agentService      = new AgentService($pdo, $agentRepository, $membershipReposit
 $membershipService = new MembershipService($pdo, $membershipRepository, $teamRepository);
 $serialGenerator   = new SerialGenerator($pdo);
 $threatService     = new ThreatService($threatRepository, $serialGenerator);
+$operationService  = new OperationService($pdo, $operationRepository, $membershipRepository, $agentRepository, $serialGenerator);
+$staffingService   = new StaffingService($operationRepository);
 
 // --- Contrôleurs -----------------------------------------------------------------
 $controllers = [
@@ -96,7 +103,13 @@ $controllers = [
         $agentRepository, $teamRepository, $tierRepository,
         $references['archetypes'], $references['abilities'],
         $membershipRepository, $agentService, $membershipService,
-        $trainingRepository, $agentAbilities,
+        $trainingRepository, $agentAbilities, $operationRepository,
+    ),
+    OperationController::class => static fn () => new OperationController(
+        $view, $session, $auth,
+        $operationRepository, $operationService, $staffingService,
+        $teamRepository, $agentRepository, $threatRepository,
+        $references['statuses'], $references['missions'], $references['locations'], $references['abilities'],
     ),
     TrainingController::class => static fn () => new TrainingController(
         $view, $session, $auth, $trainingRepository, $agentRepository, $references['formations'],

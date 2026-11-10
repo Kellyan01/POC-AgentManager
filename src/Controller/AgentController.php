@@ -18,6 +18,7 @@ use App\Model\Tier;
 use App\Repository\AgentAbilityRepository;
 use App\Repository\AgentRepository;
 use App\Repository\MembershipRepository;
+use App\Repository\OperationRepository;
 use App\Repository\ReferenceRepository;
 use App\Repository\TeamRepository;
 use App\Repository\TierRepository;
@@ -48,6 +49,7 @@ final class AgentController extends AbstractController
         private readonly MembershipService $membershipService,
         private readonly TrainingRepository $trainings,
         private readonly AgentAbilityRepository $agentAbilities,
+        private readonly OperationRepository $operations,
     ) {
         parent::__construct($view, $session, $auth);
     }
@@ -101,6 +103,7 @@ final class AgentController extends AbstractController
             'destinations' => $canMove ? $destinations : [],
             'trainings'    => $this->trainings->findForAgent($id),
             'abilities'    => $this->agentAbilities->findForAgent($id),
+            'operations'   => $this->operations->findForAgent($id),
         ]);
     }
 

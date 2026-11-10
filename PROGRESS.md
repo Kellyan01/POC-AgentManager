@@ -18,7 +18,7 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 | 5 | Équipes et appartenances | ✅ |
 | 6 | Formations et compétences | ✅ |
 | 7 | Menaces | ✅ |
-| 8 | Opérations et staffing | à faire |
+| 8 | Opérations et staffing | ✅ |
 | 9 | Médias | à faire |
 | 10 | Tableau de bord | à faire |
 | 11 | Finitions graphiques et accessibilité | à faire |
@@ -104,3 +104,16 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 **Tests curl (14/14)** : liste, tri, fiche, création par un Manager (THR-0005 puis THR-0006), accents stockés correctement, informations vides → NULL, modification, contenu `<script>` échappé à l'affichage, saisie Latin-1 → 422.
 
 **Écart au plan** : la suppression d'une menace (Admin, si elle n'est liée à aucune opération) est livrée à l'étape 9, avec `MediaService`, car elle doit d'abord supprimer les médias et leurs fichiers.
+
+### Étape 8 — Opérations et staffing
+
+**Fait**
+- `Operation`, `OperationRepository` : liste filtrable par statut, liaisons (missions, lieux, menaces, compétences requises) via une liste blanche de tables, équipes, participants avec **l'équipe à l'époque (requête 3)**, conflits de dates (partie `NOT EXISTS` de la requête 6), **staffing (requête 6 complète)**, agents disponibles pour le tableau de bord.
+- `OperationService` (transactions) : `create()` (numéro OP-AAAA-NNN, nouvelle tentative en cas de collision, doublon de nom de code traduit), `update()`, `assignTeam()` (ligne `Operations_Teams` + copie des membres, membres en conflit écartés et listés — Q4), `removeTeam()` (participants conservés — Q5), `addAgent()` (agent archivé, doublon et indisponibilité refusés avec message explicite — règle 8), `removeAgent()`. Les cardinalités 1,n (≥ 1 mission, ≥ 1 lieu) et `date_end > date_beg` sont vérifiées dans le contrôleur **et** dans le service.
+- `StaffingService` : suggestions et avertissement de tier non bloquant (règle 10), affiché en tête des participants et sur chaque ligne concernée, en texte.
+- Écrans : liste, ordre de mission (illustration, numéro, dates, statut, déclarant, brief, menaces, missions, lieux, compétences requises, équipes, participants, suggestions avec bouton « Ajouter »), formulaire avec groupes de cases à cocher. Section « Opérations » (avec l'équipe à l'époque) dans le dossier agent.
+- Script `tests/operations.sh` (premier morceau du script de recette).
+
+**Tests curl (58/58)** — parcours de recette : **staffing « Cendres » → seule Kara Danvers**, **action interdite refusée à un Manager** (Hill sur l'opération de Coulson : 403, rien en base), **création avec missions et lieux** (OP-2026-010, erreurs près des champs et valeurs conservées), **affectation d'équipe** (3 membres de la Justice League copiés ; Avengers affectés mais leurs membres écartés car engagés sur Crépuscule). Aussi : équipe à l'époque (Barry : Avengers pour Aube Rouge, Justice League pour Chevalier Noir), avertissement de tier sur Crépuscule (Thanos, God), conflit de dates bloqué puis levé après annulation de Cendres, agent archivé refusé, retrait d'équipe sans perte de participants, équipe archivée non affectable.
+
+**Écart au plan** : pas d'`AvailabilityService` séparé. La requête de conflit est dans `OperationRepository::findConflicts()` et la règle est appliquée par `OperationService` (un service d'une seule ligne n'apportait rien). La suppression d'une opération arrive à l'étape 9 avec les médias.

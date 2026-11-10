@@ -95,11 +95,12 @@ final class MembershipRepository extends AbstractRepository
         ], $rows);
     }
 
-    /** @return list<int> identifiants des membres actuels d'une équipe */
+    /** @return list<int> identifiants des membres actuels d'une équipe, par ordre alphabétique */
     public function currentMemberIds(int $teamId): array
     {
         $rows = $this->fetchAll(
-            'SELECT Id_Agent FROM Memberships WHERE Id_Team = :team AND date_leave IS NULL',
+            'SELECT m.Id_Agent FROM Memberships m JOIN Agents a ON a.Id_Agent = m.Id_Agent
+             WHERE m.Id_Team = :team AND m.date_leave IS NULL ORDER BY a.name',
             ['team' => $teamId],
         );
 

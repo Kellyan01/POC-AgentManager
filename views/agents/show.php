@@ -12,6 +12,7 @@
  * @var list<App\Model\Team> $destinations équipes vers lesquelles il peut le transférer
  * @var list<App\Model\Training> $trainings
  * @var list<array{id: int, ability: string, sources: list<string>}> $abilities
+ * @var list<array{id: int, serial: string, code_name: string, status: string, date_beg: DateTimeImmutable, date_end: ?DateTimeImmutable, team_id: ?int, team_name: ?string}> $operations
  */
 $age = age($agent->dob);
 ?>
@@ -178,6 +179,38 @@ $age = age($agent->dob);
                                         <a class="btn btn--small" href="/trainings/<?= e($training->id) ?>/edit">Modifier<span class="visually-hidden"> la session <?= e($training->formation) ?> du <?= e(format_date($training->dateBeg)) ?></span></a>
                                     </td>
                                 <?php endif; ?>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </section>
+
+        <section class="panel hud" aria-labelledby="operations-title">
+            <h2 id="operations-title" class="panel__title">Opérations <small><?= count($operations) ?></small></h2>
+            <?php if ($operations === []): ?>
+                <p class="empty">Aucune participation à une opération.</p>
+            <?php else: ?>
+                <div class="table-wrap">
+                    <table class="data-table data-table--cards">
+                        <caption class="visually-hidden">Opérations de <?= e($agent->name) ?>, avec l'équipe dans laquelle il était à l'époque</caption>
+                        <thead>
+                        <tr><th scope="col">Opération</th><th scope="col">Début</th><th scope="col">Statut</th><th scope="col">Équipe à l'époque</th></tr>
+                        </thead>
+                        <tbody>
+                        <?php foreach ($operations as $operation): ?>
+                            <tr>
+                                <td data-label="Opération"><a href="/operations/<?= e($operation['id']) ?>"><?= e($operation['code_name']) ?></a> <span class="serial"><?= e($operation['serial']) ?></span></td>
+                                <td data-label="Début"><time datetime="<?= e(iso_date($operation['date_beg'])) ?>"><?= e(format_date($operation['date_beg'])) ?></time></td>
+                                <td data-label="Statut"><?= $this->partial('status', ['status' => $operation['status']]) ?></td>
+                                <td data-label="Équipe à l'époque">
+                                    <?php if ($operation['team_id'] !== null): ?>
+                                        <a href="/teams/<?= e($operation['team_id']) ?>"><?= e($operation['team_name']) ?></a>
+                                    <?php else: ?>
+                                        <span class="tag tag--muted">Sans équipe</span>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                         </tbody>

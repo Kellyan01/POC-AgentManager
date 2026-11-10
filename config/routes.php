@@ -20,6 +20,7 @@ use App\Controller\AgentAbilityController;
 use App\Controller\AgentController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
+use App\Controller\OperationController;
 use App\Controller\TeamController;
 use App\Controller\ThreatController;
 use App\Controller\TrainingController;
@@ -70,6 +71,18 @@ return static function (Router $router): void {
     // Membres : Administrateur ou manager de l'équipe (vérifié dans le contrôleur)
     $router->post('/teams/{id}/members', [TeamController::class, 'addMember']);
     $router->post('/teams/{id}/members/{agentId}/remove', [TeamController::class, 'removeMember']);
+
+    // --- Opérations (déclaration : tous ; modification : Admin ou déclarant) --
+    $router->get('/operations', [OperationController::class, 'index']);
+    $router->get('/operations/new', [OperationController::class, 'new']);
+    $router->post('/operations', [OperationController::class, 'create']);
+    $router->get('/operations/{id}', [OperationController::class, 'show']);
+    $router->get('/operations/{id}/edit', [OperationController::class, 'edit']);
+    $router->post('/operations/{id}', [OperationController::class, 'update']);
+    $router->post('/operations/{id}/teams', [OperationController::class, 'assignTeam']);
+    $router->post('/operations/{id}/teams/{teamId}/remove', [OperationController::class, 'removeTeam']);
+    $router->post('/operations/{id}/agents', [OperationController::class, 'addAgent']);
+    $router->post('/operations/{id}/agents/{agentId}/remove', [OperationController::class, 'removeAgent']);
 
     // --- Menaces (création / modification : Administrateur et Manager) --------
     $router->get('/threats', [ThreatController::class, 'index']);
