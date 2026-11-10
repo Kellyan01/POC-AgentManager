@@ -19,6 +19,7 @@ use App\Controller\Admin\UserController;
 use App\Controller\AgentController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
+use App\Controller\TeamController;
 use App\Core\Access;
 use App\Core\Router;
 use App\Repository\ReferenceDefinition;
@@ -40,6 +41,20 @@ return static function (Router $router): void {
     $router->get('/agents/{id}/edit', [AgentController::class, 'edit']);
     $router->post('/agents/{id}', [AgentController::class, 'update']);
     $router->post('/agents/{id}/archive', [AgentController::class, 'archive'], Access::Admin);
+    // Changement d'équipe : droits vérifiés dans le contrôleur et MembershipService (décision Q2)
+    $router->post('/agents/{id}/team', [AgentController::class, 'assignTeam']);
+
+    // --- Équipes (création / modification / archivage : Administrateur) -------
+    $router->get('/teams', [TeamController::class, 'index']);
+    $router->get('/teams/new', [TeamController::class, 'new'], Access::Admin);
+    $router->post('/teams', [TeamController::class, 'create'], Access::Admin);
+    $router->get('/teams/{id}', [TeamController::class, 'show']);
+    $router->get('/teams/{id}/edit', [TeamController::class, 'edit'], Access::Admin);
+    $router->post('/teams/{id}', [TeamController::class, 'update'], Access::Admin);
+    $router->post('/teams/{id}/archive', [TeamController::class, 'archive'], Access::Admin);
+    // Membres : Administrateur ou manager de l'équipe (vérifié dans le contrôleur)
+    $router->post('/teams/{id}/members', [TeamController::class, 'addMember']);
+    $router->post('/teams/{id}/members/{agentId}/remove', [TeamController::class, 'removeMember']);
 
     // --- Administration (administrateurs uniquement) --------------------------
     $router->get('/admin', [AdminController::class, 'index'], Access::Admin);

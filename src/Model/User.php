@@ -58,4 +58,16 @@ final class User
     {
         return $this->archivedAt !== null;
     }
+
+    /** Administrateur, ou Manager responsable de cette équipe (Teams.Id_User). */
+    public function canManageTeam(Team $team): bool
+    {
+        return $this->isAdmin() || $team->managerId === $this->id;
+    }
+
+    /** Administrateur, ou Manager qui a déclaré cette opération (Operations.Id_User). */
+    public function canEditOperation(Operation $operation): bool
+    {
+        return $this->isAdmin() || $operation->declarantId === $this->id;
+    }
 }

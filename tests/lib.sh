@@ -69,14 +69,19 @@ check() {
     fi
 }
 
+# Décode les entités produites par htmlspecialchars() pour comparer du texte lisible.
+decode() {
+    sed "s/&#039;/'/g; s/&quot;/\"/g; s/&lt;/</g; s/&gt;/>/g; s/&amp;/\\&/g"
+}
+
 # contains DESCRIPTION TEXTE HTML : vérifie qu'un texte figure dans le HTML.
 contains() {
-    if grep -qF -- "$2" <<<"$3"; then check "$1" yes yes; else check "$1" yes no; fi
+    if decode <<<"$3" | grep -qF -- "$2"; then check "$1" yes yes; else check "$1" yes no; fi
 }
 
 # absent DESCRIPTION TEXTE HTML : vérifie qu'un texte NE figure PAS dans le HTML.
 absent() {
-    if grep -qF -- "$2" <<<"$3"; then check "$1" yes no; else check "$1" yes yes; fi
+    if decode <<<"$3" | grep -qF -- "$2"; then check "$1" yes no; else check "$1" yes yes; fi
 }
 
 # summary : bilan et code de sortie.

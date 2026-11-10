@@ -20,6 +20,7 @@ use App\Controller\Admin\UserController;
 use App\Controller\AgentController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
+use App\Controller\TeamController;
 use App\Core\App;
 use App\Core\Auth;
 use App\Core\Csrf;
@@ -35,6 +36,7 @@ use App\Repository\TeamRepository;
 use App\Repository\TierRepository;
 use App\Repository\UserRepository;
 use App\Service\AgentService;
+use App\Service\MembershipService;
 
 $root = dirname(__DIR__);
 
@@ -68,7 +70,8 @@ $membershipRepository = new MembershipRepository($pdo);
 
 // --- Services ------------------------------------------------------------------
 $auth         = new Auth($session, $csrf, $userRepository);
-$agentService = new AgentService($pdo, $agentRepository, $membershipRepository);
+$agentService      = new AgentService($pdo, $agentRepository, $membershipRepository);
+$membershipService = new MembershipService($pdo, $membershipRepository, $teamRepository);
 
 // --- Contrôleurs -----------------------------------------------------------------
 $controllers = [
@@ -79,7 +82,11 @@ $controllers = [
         $view, $session, $auth,
         $agentRepository, $teamRepository, $tierRepository,
         $references['archetypes'], $references['abilities'],
-        $membershipRepository, $agentService,
+        $membershipRepository, $agentService, $membershipService,
+    ),
+    TeamController::class => static fn () => new TeamController(
+        $view, $session, $auth,
+        $teamRepository, $agentRepository, $userRepository, $membershipRepository, $membershipService,
     ),
 
     AdminController::class     => static fn () => new AdminController($view, $session, $auth),

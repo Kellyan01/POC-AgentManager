@@ -15,7 +15,7 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 | 1-2 | Socle + authentification et rôles | ✅ |
 | 3 | Référentiels et utilisateurs | ✅ |
 | 4 | Agents | ✅ |
-| 5 | Équipes et appartenances | à faire |
+| 5 | Équipes et appartenances | ✅ |
 | 6 | Formations et compétences | à faire |
 | 7 | Menaces | à faire |
 | 8 | Opérations et staffing | à faire |
@@ -67,3 +67,15 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 - Partials `portrait` (SVG de remplacement « NO VISUAL // CLASSIFIED », variantes agent / menace / opération), `agent-name` (caviardage des archivés, mention « Archivé » en texte), `tier`.
 
 **Tests curl (41/41)** : liste sans les archivés, chaque filtre et leur combinaison, dossier de Barry (historique Avengers → Justice League), dossier archivé consultable mais non modifiable, 404, création et modification par un Manager, validation (422, valeurs conservées, `aria-invalid`), archivage refusé au Manager (403), archivage de Peter par l'Admin avec avertissement « Crépuscule » et clôture de son appartenance.
+
+### Étape 5 — Équipes et appartenances
+
+**Fait**
+- `MembershipService` : `addMember()` (clôture puis ouverture dans une transaction, erreur 1062 sur `active_agent` traduite en message), `removeMember()`, `archiveTeam()` (clôture de toutes les appartenances + archivage dans une transaction).
+- Décision Q2 appliquée : le droit sur l'équipe de destination est vérifié par le contrôleur, le droit sur l'équipe d'origine par le service. Un Manager ne voit dans la liste des candidats que les agents sans équipe ou membres de ses autres équipes.
+- La règle « peut gérer cette équipe / modifier cette opération » est portée par l'entité `User` (`canManageTeam()`, `canEditOperation()`), utilisée à la fois par `Auth` et par les services.
+- Écrans : liste des équipes (« Mon équipe »), fiche (membres actuels et anciens, intégration, libération, archivage), formulaire Admin (nom, manager). Panneau « Affectation » sur le dossier d'un agent (transfert ou libération).
+
+**Tests curl (51/51)** — parcours **« déplacer Barry Allen »** : Hill ne peut pas le prendre à Coulson (message « son manager doit d'abord le libérer »), Coulson ne peut pas l'envoyer chez les Avengers (403), Coulson le libère, Hill l'intègre puis le transfère entre ses deux équipes, l'Admin le transfère directement ; une seule appartenance en cours en base, clôture et ouverture au même instant. Parcours **« archiver une équipe »** : Dark Squad archivée par l'Admin, 2 appartenances closes (vérifié en base), équipe absente de la liste, membres sans équipe, ajout de membre refusé, non modifiable. Nom d'une équipe archivée non réutilisable.
+
+**Écart au plan** : route supplémentaire `POST /agents/{id}/team` utilisée par le panneau « Affectation » (la destination est choisie dans une liste, l'URL du formulaire ne peut pas en dépendre sans JavaScript).

@@ -6,6 +6,10 @@
  * @var App\Model\Agent     $agent
  * @var App\Model\User      $currentUser
  * @var list<array{team_id: int, team_name: string, team_archived: bool, date_join: DateTimeImmutable, date_leave: ?DateTimeImmutable}> $teamHistory
+ * @var App\Model\Team|null $currentTeam
+ * @var bool                $canRelease   l'utilisateur gère l'équipe actuelle de l'agent
+ * @var bool                $canMove      l'utilisateur peut changer l'agent d'équipe
+ * @var list<App\Model\Team> $destinations équipes vers lesquelles il peut le transférer
  */
 $age = age($agent->dob);
 ?>
@@ -75,6 +79,37 @@ $age = age($agent->dob);
                 <dd><time datetime="<?= e(iso_date($agent->createdAt)) ?>"><?= e(format_date($agent->createdAt)) ?></time></dd>
             </dl>
         </section>
+
+        <?php if (!$agent->isArchived()): ?>
+            <section class="panel hud" aria-labelledby="assign-title">
+                <h2 id="assign-title" class="panel__title">Affectation</h2>
+                <?php if ($canMove && $destinations !== []): ?>
+                    <form method="post" action="/agents/<?= e($agent->id) ?>/team" class="inline-fields">
+                        <?= $this->csrfField() ?>
+                        <?= $this->partial('field', [
+                            'name' => 'team', 'label' => $currentTeam === null ? 'Intégrer l\'équipe' : 'Transférer vers', 'type' => 'select',
+                            'required' => true, 'placeholder' => '— Choisir une équipe —',
+                            'options' => array_map(static fn ($t) => [$t->id, $t->name], $destinations),
+                            'hint' => $currentTeam === null ? null : 'L\'appartenance à ' . $currentTeam->name . ' sera close, puis la nouvelle ouverte.',
+                        ]) ?>
+                        <button type="submit" class="btn btn--primary"><?= $currentTeam === null ? 'Intégrer' : 'Transférer' ?></button>
+                    </form>
+                <?php elseif ($currentTeam !== null && !$canRelease): ?>
+                    <p>Membre de <strong><?= e($currentTeam->name) ?></strong>, équipe gérée par <?= e($currentTeam->managerName) ?>. Pour l'intégrer à l'une de vos équipes, son manager doit d'abord le libérer.</p>
+                <?php else: ?>
+                    <p class="empty">Aucune équipe de destination disponible pour vous.</p>
+                <?php endif; ?>
+
+                <?php if ($canRelease): ?>
+                    <form class="panel__footer" method="post" action="/teams/<?= e($currentTeam->id) ?>/members/<?= e($agent->id) ?>/remove"
+                          data-confirm="Libérer <?= e($agent->name) ?> de l'équipe <?= e($currentTeam->name) ?> ?">
+                        <?= $this->csrfField() ?>
+                        <input type="hidden" name="from" value="agent">
+                        <button type="submit" class="btn btn--danger btn--small">Libérer de l'équipe <?= e($currentTeam->name) ?></button>
+                    </form>
+                <?php endif; ?>
+            </section>
+        <?php endif; ?>
 
         <section class="panel hud" aria-labelledby="teams-title">
             <h2 id="teams-title" class="panel__title">Historique des équipes</h2>

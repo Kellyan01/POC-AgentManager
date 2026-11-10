@@ -13,6 +13,7 @@ use App\Core\Validator;
 use App\Core\View;
 use App\Model\Agent;
 use App\Model\ReferenceItem;
+use App\Model\Team;
 use App\Model\Tier;
 use App\Repository\AgentRepository;
 use App\Repository\MembershipRepository;
@@ -20,6 +21,7 @@ use App\Repository\ReferenceRepository;
 use App\Repository\TeamRepository;
 use App\Repository\TierRepository;
 use App\Service\AgentService;
+use App\Service\MembershipService;
 use DateTimeImmutable;
 
 /**
@@ -41,6 +43,7 @@ final class AgentController extends AbstractController
         private readonly ReferenceRepository $abilities,
         private readonly MembershipRepository $memberships,
         private readonly AgentService $agentService,
+        private readonly MembershipService $membershipService,
     ) {
         parent::__construct($view, $session, $auth);
     }
@@ -74,12 +77,46 @@ final class AgentController extends AbstractController
     public function show(Request $request, int $id): Response
     {
         $agent = $this->found($this->agents->findById($id));
+        $user = $this->auth->requireUser();
+
+        // Affectation (décision Q2) : on ne propose de déplacer l'agent que si
+        // l'utilisateur gère son équipe actuelle (ou s'il n'en a pas).
+        $currentTeam = $agent->teamId !== null ? $this->teams->findById($agent->teamId) : null;
+        $canRelease = $currentTeam !== null && $user->canManageTeam($currentTeam);
+        $canMove = !$agent->isArchived() && ($currentTeam === null || $canRelease);
+        $destinations = $user->isAdmin() ? $this->teams->findAll() : $this->teams->findManagedBy((int) $user->id);
+        $destinations = array_values(array_filter($destinations, static fn (Team $t): bool => $t->id !== $agent->teamId));
 
         return $this->render('agents/show', [
-            'title'       => $agent->name . ' — Dossier agent',
-            'agent'       => $agent,
-            'teamHistory' => $this->memberships->findHistoryForAgent($id),
+            'title'        => $agent->name . ' — Dossier agent',
+            'agent'        => $agent,
+            'teamHistory'  => $this->memberships->findHistoryForAgent($id),
+            'currentTeam'  => $currentTeam,
+            'canRelease'   => $canRelease && !$agent->isArchived(),
+            'canMove'      => $canMove,
+            'destinations' => $canMove ? $destinations : [],
         ]);
+    }
+
+    /** Change l'agent d'équipe (ou l'intègre s'il n'en a pas). */
+    public function assignTeam(Request $request, int $id): Response
+    {
+        $agent = $this->found($this->agents->findById($id));
+        $teamId = $request->input('team');
+        $team = $teamId !== null && ctype_digit($teamId) ? $this->teams->findById((int) $teamId) : null;
+
+        if ($team === null) {
+            return $this->failure('Choisissez l\'équipe de destination.', '/agents/' . $id);
+        }
+        $this->denyUnless($this->auth->canManageTeam($team));
+
+        try {
+            $this->membershipService->addMember($team, $agent, $this->auth->requireUser());
+        } catch (BusinessRuleException $e) {
+            return $this->failure($e->getMessage(), '/agents/' . $id);
+        }
+
+        return $this->success(sprintf('%s est désormais membre de l\'équipe %s.', $agent->name, $team->name), '/agents/' . $id);
     }
 
     public function new(Request $request): Response

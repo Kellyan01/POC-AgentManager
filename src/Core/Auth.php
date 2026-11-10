@@ -108,20 +108,16 @@ final class Auth
         return $this->user()?->isAdmin() ?? false;
     }
 
-    /** Administrateur, ou Manager responsable de cette équipe (Teams.Id_User). */
+    /** Administrateur, ou Manager responsable de cette équipe (règle portée par User). */
     public function canManageTeam(Team $team): bool
     {
-        $user = $this->user();
-
-        return $user !== null && ($user->isAdmin() || $team->managerId === $user->id);
+        return $this->user()?->canManageTeam($team) ?? false;
     }
 
-    /** Administrateur, ou Manager qui a déclaré cette opération (Operations.Id_User). */
+    /** Administrateur, ou Manager qui a déclaré cette opération (règle portée par User). */
     public function canEditOperation(Operation $operation): bool
     {
-        $user = $this->user();
-
-        return $user !== null && ($user->isAdmin() || $operation->declarantId === $user->id);
+        return $this->user()?->canEditOperation($operation) ?? false;
     }
 
     /** @throws HttpException 403 si l'utilisateur n'est pas administrateur */
