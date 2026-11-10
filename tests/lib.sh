@@ -37,15 +37,39 @@ token() {
     csrf_from <<<"$page"
 }
 
+# Encode une valeur pour une URL, octet par octet (UTF-8 préservé).
+# Nécessaire sous Windows : curl.exe convertit ses arguments dans la page de code
+# ANSI, ce qui transformerait « é » (UTF-8) en un octet Latin-1 invalide.
+urlenc() {
+    local LC_ALL=C value="$1" out="" char hex i
+    for ((i = 0; i < ${#value}; i++)); do
+        char="${value:i:1}"
+        case "$char" in
+            [a-zA-Z0-9.~_-]) out+="$char" ;;
+            *) printf -v hex '%%%02X' "'$char"; out+="$hex" ;;
+        esac
+    done
+    printf '%s' "$out"
+}
+
 # post PROFIL CHEMIN [--data-urlencode "cle=valeur" ...] : POST avec jeton CSRF.
 # Affiche « CODE URL_DE_REDIRECTION ».
 post() {
     local profile="$1" path="$2"
     shift 2
-    local csrf
+    local csrf args=()
+    while [[ $# -gt 0 ]]; do
+        if [[ "$1" == "--data-urlencode" ]]; then
+            args+=(-d "${2%%=*}=$(urlenc "${2#*=}")")
+            shift 2
+        else
+            args+=("$1")
+            shift
+        fi
+    done
     csrf=$(token "$profile")
     curl -s -o "$JARS/last_body" -w '%{http_code} %{redirect_url}' -c "$JARS/$profile" -b "$JARS/$profile" \
-        --data-urlencode "_csrf=$csrf" "$@" "$BASE$path"
+        -d "_csrf=$csrf" "${args[@]}" "$BASE$path"
 }
 
 # Corps de la dernière réponse à un post().

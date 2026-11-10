@@ -17,7 +17,7 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 | 4 | Agents | ✅ |
 | 5 | Équipes et appartenances | ✅ |
 | 6 | Formations et compétences | ✅ |
-| 7 | Menaces | à faire |
+| 7 | Menaces | ✅ |
 | 8 | Opérations et staffing | à faire |
 | 9 | Médias | à faire |
 | 10 | Tableau de bord | à faire |
@@ -92,3 +92,15 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 **Tests curl (31/31)** : historique de Peter (échec puis réussite du pilotage), provenances, 9 compétences proposées à Barry (11 − 2), refus de forcer une compétence déjà acquise, ajout/retrait d'expérience, refus de retirer une compétence d'archétype, validations des dates et du résultat (valeurs conservées), réussite de Wally → « Premiers secours » apparaît via Formation, suppression réservée à l'Admin, agent archivé non modifiable.
 
 **Écart au plan** : page `GET /agents/{id}/trainings/new` ajoutée pour le formulaire (les erreurs s'y affichent près des champs, plutôt que de recharger tout le dossier).
+
+### Étape 7 — Menaces
+
+**Fait**
+- `Threat`, `ThreatRepository` (tier, portrait principal, nombre d'opérations, opérations liées, menaces de tier God par libellé).
+- `SerialGenerator` (THR-NNNN et OP-AAAA-NNN) et `ThreatService::create()` : nouvelle tentative si l'index UNIQUE refuse un numéro pris par une création simultanée.
+- Liste (de la plus dangereuse à la moins dangereuse), fiche (portrait SVG rouge, renseignements, opérations liées avec voyant de statut), formulaire. Numéro de série jamais modifiable.
+- **Correctif transversal** : le `Validator` refuse toute saisie qui n'est pas en UTF-8 valide (422 avec message) au lieu de laisser MySQL lever une erreur 1366 (500). Découvert grâce au `curl.exe` de Windows, qui envoyait les accents en Latin-1 ; `tests/lib.sh` encode désormais les valeurs lui-même.
+
+**Tests curl (14/14)** : liste, tri, fiche, création par un Manager (THR-0005 puis THR-0006), accents stockés correctement, informations vides → NULL, modification, contenu `<script>` échappé à l'affichage, saisie Latin-1 → 422.
+
+**Écart au plan** : la suppression d'une menace (Admin, si elle n'est liée à aucune opération) est livrée à l'étape 9, avec `MediaService`, car elle doit d'abord supprimer les médias et leurs fichiers.

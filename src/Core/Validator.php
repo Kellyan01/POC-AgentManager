@@ -27,6 +27,13 @@ final class Validator
     /** @param array<string, string|null> $data */
     public function __construct(private readonly array $data)
     {
+        // Un texte qui n'est pas en UTF-8 valide serait refusé par MySQL (erreur 1366) :
+        // on le signale comme une erreur de saisie plutôt que de laisser une erreur 500.
+        foreach ($data as $field => $value) {
+            if (is_string($value) && !mb_check_encoding($value, 'UTF-8')) {
+                $this->addError($field, 'Texte mal encodé : le contenu doit être en UTF-8.');
+            }
+        }
     }
 
     public function required(string $field, string $message = 'Ce champ est obligatoire.'): self

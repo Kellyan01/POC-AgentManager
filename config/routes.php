@@ -21,6 +21,7 @@ use App\Controller\AgentController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
 use App\Controller\TeamController;
+use App\Controller\ThreatController;
 use App\Controller\TrainingController;
 use App\Core\Access;
 use App\Core\Router;
@@ -69,6 +70,14 @@ return static function (Router $router): void {
     // Membres : Administrateur ou manager de l'équipe (vérifié dans le contrôleur)
     $router->post('/teams/{id}/members', [TeamController::class, 'addMember']);
     $router->post('/teams/{id}/members/{agentId}/remove', [TeamController::class, 'removeMember']);
+
+    // --- Menaces (création / modification : Administrateur et Manager) --------
+    $router->get('/threats', [ThreatController::class, 'index']);
+    $router->get('/threats/new', [ThreatController::class, 'new']);
+    $router->post('/threats', [ThreatController::class, 'create']);
+    $router->get('/threats/{id}', [ThreatController::class, 'show']);
+    $router->get('/threats/{id}/edit', [ThreatController::class, 'edit']);
+    $router->post('/threats/{id}', [ThreatController::class, 'update']);
 
     // --- Administration (administrateurs uniquement) --------------------------
     $router->get('/admin', [AdminController::class, 'index'], Access::Admin);
