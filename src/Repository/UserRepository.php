@@ -110,6 +110,15 @@ final class UserRepository extends AbstractRepository implements ArchivableRepos
         $this->execute('UPDATE Users SET archived_at = NOW() WHERE Id_User = :id AND archived_at IS NULL', ['id' => $id]);
     }
 
+    /** Vrai si l'utilisateur est manager d'au moins une équipe non archivée. */
+    public function managesActiveTeams(int $id): bool
+    {
+        return $this->fetchOne(
+            'SELECT 1 FROM Teams WHERE Id_User = :id AND archived_at IS NULL LIMIT 1',
+            ['id' => $id],
+        ) !== null;
+    }
+
     /** @return list<ReferenceItem> */
     public function findRoles(): array
     {

@@ -12,10 +12,15 @@ declare(strict_types=1);
  * Aucune action qui modifie des données n'est accessible en GET.
  */
 
+use App\Controller\Admin\AdminController;
+use App\Controller\Admin\ReferenceController;
+use App\Controller\Admin\TierController;
+use App\Controller\Admin\UserController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
 use App\Core\Access;
 use App\Core\Router;
+use App\Repository\ReferenceDefinition;
 
 return static function (Router $router): void {
     // --- Authentification ---------------------------------------------------
@@ -25,4 +30,30 @@ return static function (Router $router): void {
 
     // --- Tableau de bord ----------------------------------------------------
     $router->get('/', [DashboardController::class, 'index']);
+
+    // --- Administration (administrateurs uniquement) --------------------------
+    $router->get('/admin', [AdminController::class, 'index'], Access::Admin);
+
+    $router->get('/admin/users', [UserController::class, 'index'], Access::Admin);
+    $router->get('/admin/users/new', [UserController::class, 'new'], Access::Admin);
+    $router->post('/admin/users', [UserController::class, 'create'], Access::Admin);
+    $router->get('/admin/users/{id}/edit', [UserController::class, 'edit'], Access::Admin);
+    $router->post('/admin/users/{id}', [UserController::class, 'update'], Access::Admin);
+    $router->post('/admin/users/{id}/archive', [UserController::class, 'archive'], Access::Admin);
+
+    $router->get('/admin/tiers', [TierController::class, 'index'], Access::Admin);
+    $router->post('/admin/tiers', [TierController::class, 'create'], Access::Admin);
+    $router->get('/admin/tiers/{id}/edit', [TierController::class, 'edit'], Access::Admin);
+    $router->post('/admin/tiers/{id}', [TierController::class, 'update'], Access::Admin);
+    $router->post('/admin/tiers/{id}/delete', [TierController::class, 'delete'], Access::Admin);
+
+    // Référentiels à libellé unique : mêmes routes pour chacun, le slug est passé
+    // au contrôleur comme paramètre fixe « ref ».
+    foreach (array_keys(ReferenceDefinition::catalog()) as $ref) {
+        $router->get("/admin/$ref", [ReferenceController::class, 'index'], Access::Admin, ['ref' => $ref]);
+        $router->post("/admin/$ref", [ReferenceController::class, 'create'], Access::Admin, ['ref' => $ref]);
+        $router->get("/admin/$ref/{id}/edit", [ReferenceController::class, 'edit'], Access::Admin, ['ref' => $ref]);
+        $router->post("/admin/$ref/{id}", [ReferenceController::class, 'update'], Access::Admin, ['ref' => $ref]);
+        $router->post("/admin/$ref/{id}/delete", [ReferenceController::class, 'delete'], Access::Admin, ['ref' => $ref]);
+    }
 };

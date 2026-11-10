@@ -13,6 +13,10 @@ declare(strict_types=1);
  * de la route demandée est réellement instancié.
  */
 
+use App\Controller\Admin\AdminController;
+use App\Controller\Admin\ReferenceController;
+use App\Controller\Admin\TierController;
+use App\Controller\Admin\UserController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
 use App\Core\App;
@@ -22,6 +26,9 @@ use App\Core\Database;
 use App\Core\Router;
 use App\Core\Session;
 use App\Core\View;
+use App\Repository\ReferenceDefinition;
+use App\Repository\ReferenceRepository;
+use App\Repository\TierRepository;
 use App\Repository\UserRepository;
 
 $root = dirname(__DIR__);
@@ -42,6 +49,13 @@ $view    = new View($root . '/views', $session, $csrf);
 
 // --- Repositories (chacun reçoit le même PDO) ----------------------------------
 $userRepository = new UserRepository($pdo);
+$tierRepository = new TierRepository($pdo);
+
+// Un ReferenceRepository par référentiel à libellé unique (compétences, lieux...)
+$references = array_map(
+    static fn (ReferenceDefinition $definition) => new ReferenceRepository($pdo, $definition),
+    ReferenceDefinition::catalog(),
+);
 
 // --- Services ------------------------------------------------------------------
 $auth = new Auth($session, $csrf, $userRepository);
@@ -50,6 +64,11 @@ $auth = new Auth($session, $csrf, $userRepository);
 $controllers = [
     AuthController::class      => static fn () => new AuthController($view, $session, $auth),
     DashboardController::class => static fn () => new DashboardController($view, $session, $auth),
+
+    AdminController::class     => static fn () => new AdminController($view, $session, $auth),
+    UserController::class      => static fn () => new UserController($view, $session, $auth, $userRepository),
+    TierController::class      => static fn () => new TierController($view, $session, $auth, $tierRepository),
+    ReferenceController::class => static fn () => new ReferenceController($view, $session, $auth, $references),
 ];
 
 // --- Routes ----------------------------------------------------------------------

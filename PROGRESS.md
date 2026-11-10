@@ -13,7 +13,7 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 | # | Étape | État |
 |---|---|---|
 | 1-2 | Socle + authentification et rôles | ✅ |
-| 3 | Référentiels et utilisateurs | à faire |
+| 3 | Référentiels et utilisateurs | ✅ |
 | 4 | Agents | à faire |
 | 5 | Équipes et appartenances | à faire |
 | 6 | Formations et compétences | à faire |
@@ -42,3 +42,18 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 - Étapes 1 et 2 livrées ensemble : le contrôle d'accès centralisé dans `App` a besoin de `Auth` dès le socle.
 - Jeton CSRF invalide : réponse **403** (code standard) au lieu du 419 prévu (code non standard, propre à Laravel).
 - Une seule vue `errors/error.php` paramétrée par le code, au lieu d'un fichier par code.
+
+### Étape 3 — Référentiels et utilisateurs
+
+**Fait**
+- `ReferenceDefinition` (catalogue de 6 référentiels à libellé unique) + `ReferenceRepository` générique (une instance par référentiel, créée dans le bootstrap) + `ReferenceController` unique. Archétypes et formations : cases à cocher des compétences, enregistrées avec la valeur dans une transaction (`ReferenceRepository::save()`).
+- `TierRepository` / `TierController` (libellé + niveau, unicité des deux).
+- Suppression d'une valeur utilisée : l'erreur MySQL 1451 est traduite en message clair (`MysqlError`).
+- Libellés verrouillés (décision Q9) : `Planifiée`, `En cours`, `Annulée`, `God` — ni renommage ni suppression.
+- Utilisateurs : création, modification (mot de passe facultatif, confirmation), archivage. Garde-fous : pas d'auto-archivage, pas de changement de son propre rôle, pas d'archivage d'un manager d'équipes actives, compte archivé non modifiable.
+
+**Tests curl (47/47)** : 403 pour un Manager sur `/admin` (GET et POST), CRUD des référentiels, doublon (422), suppression refusée d'une valeur utilisée (Gotham City), verrous des statuts et du tier God, archétype avec compétences, création d'utilisateur puis connexion, e-mail déjà pris (valeurs conservées), archivage refusé (soi-même, manager d'équipes), compte archivé refusé à la connexion et **déconnecté en cours de session**.
+
+**Écarts au plan**
+- Archétypes et formations passent par le contrôleur générique (option « compétences » de la définition) au lieu de contrôleurs dédiés : moins de code dupliqué.
+- Formulaire d'ajout sur la page de liste du référentiel (pas de page `/new` séparée).
