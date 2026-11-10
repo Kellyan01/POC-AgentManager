@@ -1,0 +1,24 @@
+{
+    "name": "agent-manager/agent-manager",
+    "description": "Gestion d'agents super-héroïques : équipes, formations, compétences, menaces et opérations. MVC PHP fait main.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.3",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-fileinfo": "*",
+        "ext-mbstring": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

@@ -1,0 +1,15 @@
+# Dépendances Composer (régénérées par « composer install »)
+/vendor/
+
+# Configuration locale : contient les identifiants de la base
+/config/config.php
+
+# Fichiers uploadés : on versionne les dossiers (via .gitkeep), pas leur contenu
+/public/uploads/*/*
+!/public/uploads/*/.gitkeep
+
+# Fichiers d'éditeur et système
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store

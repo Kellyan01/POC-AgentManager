@@ -1,0 +1,7 @@
+# Fins de ligne LF partout (les scripts bash ne supportent pas CRLF)
+* text=auto eol=lf
+
+*.woff2 binary
+*.png   binary
+*.jpg   binary
+*.webp  binary
