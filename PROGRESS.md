@@ -14,7 +14,7 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 |---|---|---|
 | 1-2 | Socle + authentification et rôles | ✅ |
 | 3 | Référentiels et utilisateurs | ✅ |
-| 4 | Agents | à faire |
+| 4 | Agents | ✅ |
 | 5 | Équipes et appartenances | à faire |
 | 6 | Formations et compétences | à faire |
 | 7 | Menaces | à faire |
@@ -57,3 +57,13 @@ Suivi étape par étape du plan (`PLAN.md`). Chaque étape se termine par `php -
 **Écarts au plan**
 - Archétypes et formations passent par le contrôleur générique (option « compétences » de la définition) au lieu de contrôleurs dédiés : moins de code dupliqué.
 - Formulaire d'ajout sur la page de liste du référentiel (pas de page `/new` séparée).
+
+### Étape 4 — Agents
+
+**Fait**
+- Entités `Agent`, `Team`, `Membership` ; `AgentRepository` (équipe actuelle via la vue `current_memberships`, portrait principal = requête 8, filtres équipe / « sans équipe » / tier / archétype / compétence via la vue `agent_abilities`), `TeamRepository`, `MembershipRepository` (requête 2 pour l'historique).
+- `AgentService::archive()` : clôture de l'appartenance + archivage dans une transaction (Q3), avertissement listant les opérations planifiées ou en cours où l'agent figure encore.
+- Liste filtrable (envoi automatique en JS, bouton « Filtrer » sans JS), dossier (tampon CLASSIFIED / ARCHIVED, identification, historique des équipes), formulaire avec validation serveur.
+- Partials `portrait` (SVG de remplacement « NO VISUAL // CLASSIFIED », variantes agent / menace / opération), `agent-name` (caviardage des archivés, mention « Archivé » en texte), `tier`.
+
+**Tests curl (41/41)** : liste sans les archivés, chaque filtre et leur combinaison, dossier de Barry (historique Avengers → Justice League), dossier archivé consultable mais non modifiable, 404, création et modification par un Manager, validation (422, valeurs conservées, `aria-invalid`), archivage refusé au Manager (403), archivage de Peter par l'Admin avec avertissement « Crépuscule » et clôture de son appartenance.

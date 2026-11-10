@@ -17,6 +17,7 @@ use App\Controller\Admin\AdminController;
 use App\Controller\Admin\ReferenceController;
 use App\Controller\Admin\TierController;
 use App\Controller\Admin\UserController;
+use App\Controller\AgentController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
 use App\Core\App;
@@ -26,10 +27,14 @@ use App\Core\Database;
 use App\Core\Router;
 use App\Core\Session;
 use App\Core\View;
+use App\Repository\AgentRepository;
+use App\Repository\MembershipRepository;
 use App\Repository\ReferenceDefinition;
 use App\Repository\ReferenceRepository;
+use App\Repository\TeamRepository;
 use App\Repository\TierRepository;
 use App\Repository\UserRepository;
+use App\Service\AgentService;
 
 $root = dirname(__DIR__);
 
@@ -57,13 +62,25 @@ $references = array_map(
     ReferenceDefinition::catalog(),
 );
 
+$agentRepository      = new AgentRepository($pdo);
+$teamRepository       = new TeamRepository($pdo);
+$membershipRepository = new MembershipRepository($pdo);
+
 // --- Services ------------------------------------------------------------------
-$auth = new Auth($session, $csrf, $userRepository);
+$auth         = new Auth($session, $csrf, $userRepository);
+$agentService = new AgentService($pdo, $agentRepository, $membershipRepository);
 
 // --- Contrôleurs -----------------------------------------------------------------
 $controllers = [
     AuthController::class      => static fn () => new AuthController($view, $session, $auth),
     DashboardController::class => static fn () => new DashboardController($view, $session, $auth),
+
+    AgentController::class => static fn () => new AgentController(
+        $view, $session, $auth,
+        $agentRepository, $teamRepository, $tierRepository,
+        $references['archetypes'], $references['abilities'],
+        $membershipRepository, $agentService,
+    ),
 
     AdminController::class     => static fn () => new AdminController($view, $session, $auth),
     UserController::class      => static fn () => new UserController($view, $session, $auth, $userRepository),

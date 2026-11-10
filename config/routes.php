@@ -16,6 +16,7 @@ use App\Controller\Admin\AdminController;
 use App\Controller\Admin\ReferenceController;
 use App\Controller\Admin\TierController;
 use App\Controller\Admin\UserController;
+use App\Controller\AgentController;
 use App\Controller\AuthController;
 use App\Controller\DashboardController;
 use App\Core\Access;
@@ -30,6 +31,15 @@ return static function (Router $router): void {
 
     // --- Tableau de bord ----------------------------------------------------
     $router->get('/', [DashboardController::class, 'index']);
+
+    // --- Agents (création / modification : Administrateur et Manager) ---------
+    $router->get('/agents', [AgentController::class, 'index']);
+    $router->get('/agents/new', [AgentController::class, 'new']);
+    $router->post('/agents', [AgentController::class, 'create']);
+    $router->get('/agents/{id}', [AgentController::class, 'show']);
+    $router->get('/agents/{id}/edit', [AgentController::class, 'edit']);
+    $router->post('/agents/{id}', [AgentController::class, 'update']);
+    $router->post('/agents/{id}/archive', [AgentController::class, 'archive'], Access::Admin);
 
     // --- Administration (administrateurs uniquement) --------------------------
     $router->get('/admin', [AdminController::class, 'index'], Access::Admin);

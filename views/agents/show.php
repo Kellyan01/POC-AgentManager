@@ -1,0 +1,113 @@
+<?php
+/**
+ * Dossier d'un agent, présenté comme un dossier classifié.
+ *
+ * @var App\Core\View       $this
+ * @var App\Model\Agent     $agent
+ * @var App\Model\User      $currentUser
+ * @var list<array{team_id: int, team_name: string, team_archived: bool, date_join: DateTimeImmutable, date_leave: ?DateTimeImmutable}> $teamHistory
+ */
+$age = age($agent->dob);
+?>
+<header class="page-header">
+    <div>
+        <p class="kicker"><a href="/agents">Agents</a> // Dossier <?= e($agent->fileNumber()) ?> // Eyes only</p>
+        <div class="dossier__header">
+            <h1 class="page-title"><?= e($agent->name) ?></h1>
+            <?php if ($agent->isArchived()): ?>
+                <span class="stamp stamp--muted">Archived</span>
+            <?php else: ?>
+                <span class="stamp">Classified</span>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php if (!$agent->isArchived()): ?>
+        <div class="page-actions">
+            <a class="btn" href="/agents/<?= e($agent->id) ?>/edit">Modifier</a>
+            <?php if ($currentUser->isAdmin()): ?>
+                <form class="inline-form" method="post" action="/agents/<?= e($agent->id) ?>/archive"
+                      data-confirm="Archiver <?= e($agent->name) ?> ? Son appartenance à une équipe sera close.">
+                    <?= $this->csrfField() ?>
+                    <button type="submit" class="btn btn--danger">Archiver</button>
+                </form>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+</header>
+
+<?php if ($agent->isArchived()): ?>
+    <div class="alert alert--warning" role="status">
+        <span class="alert__label">Archivé</span>
+        <span class="alert__message">Agent archivé le <?= e(format_date($agent->archivedAt, true)) ?>. Le dossier est conservé pour l'historique et n'est plus modifiable.</span>
+    </div>
+<?php endif; ?>
+
+<div class="dossier">
+    <aside aria-label="Portrait">
+        <?= $this->partial('portrait', ['url' => $agent->portrait, 'alt' => 'Portrait de ' . $agent->name, 'kind' => 'agent']) ?>
+    </aside>
+
+    <div class="stack">
+        <section class="panel hud" aria-labelledby="identity-title">
+            <h2 id="identity-title" class="panel__title">Identification <small><?= e($agent->fileNumber()) ?></small></h2>
+            <dl class="meta">
+                <dt>Archétype</dt>
+                <dd><?= e($agent->archetype) ?></dd>
+                <dt>Tier</dt>
+                <dd><?= $this->partial('tier', ['tier' => (string) $agent->tier]) ?></dd>
+                <dt>Naissance</dt>
+                <dd>
+                    <?php if ($agent->dob !== null): ?>
+                        <time datetime="<?= e(input_date($agent->dob)) ?>"><?= e(format_date($agent->dob)) ?></time> (<?= e($age) ?> ans)
+                    <?php else: ?>
+                        <span class="tag tag--muted">Non datée</span>
+                    <?php endif; ?>
+                </dd>
+                <dt>Équipe actuelle</dt>
+                <dd>
+                    <?php if ($agent->teamId !== null): ?>
+                        <a href="/teams/<?= e($agent->teamId) ?>"><?= e($agent->teamName) ?></a>
+                    <?php else: ?>
+                        <span class="tag tag--muted">Sans équipe</span>
+                    <?php endif; ?>
+                </dd>
+                <dt>Dossier ouvert</dt>
+                <dd><time datetime="<?= e(iso_date($agent->createdAt)) ?>"><?= e(format_date($agent->createdAt)) ?></time></dd>
+            </dl>
+        </section>
+
+        <section class="panel hud" aria-labelledby="teams-title">
+            <h2 id="teams-title" class="panel__title">Historique des équipes</h2>
+            <?php if ($teamHistory === []): ?>
+                <p class="empty">Aucune affectation enregistrée.</p>
+            <?php else: ?>
+                <div class="table-wrap">
+                    <table class="data-table data-table--cards">
+                        <caption class="visually-hidden">Équipes successives de <?= e($agent->name) ?>, de la plus récente à la plus ancienne</caption>
+                        <thead>
+                        <tr><th scope="col">Équipe</th><th scope="col">Arrivée</th><th scope="col">Départ</th></tr>
+                        </thead>
+                        <tbody>
+                        <?php foreach ($teamHistory as $membership): ?>
+                            <tr>
+                                <td data-label="Équipe">
+                                    <a href="/teams/<?= e($membership['team_id']) ?>"><?= e($membership['team_name']) ?></a>
+                                    <?php if ($membership['team_archived']): ?><span class="tag tag--muted">Archivée</span><?php endif; ?>
+                                </td>
+                                <td data-label="Arrivée"><time datetime="<?= e(iso_date($membership['date_join'])) ?>"><?= e(format_date($membership['date_join'])) ?></time></td>
+                                <td data-label="Départ">
+                                    <?php if ($membership['date_leave'] === null): ?>
+                                        <span class="status status--active">En poste</span>
+                                    <?php else: ?>
+                                        <time datetime="<?= e(iso_date($membership['date_leave'])) ?>"><?= e(format_date($membership['date_leave'])) ?></time>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </section>
+    </div>
+</div>
